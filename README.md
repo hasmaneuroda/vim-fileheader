@@ -126,7 +126,7 @@ It checks the first lines for a `# File:` header marker.
 You can add a header manually to an existing file with:
 
 ```vim
-:AddFileheader
+:AddHeader
 ```
 
 For shell scripts:
@@ -137,7 +137,7 @@ For shell scripts:
 You can also define a convenient mapping in your `.vimrc`:
 
 ```vim
-nnoremap <leader>fh :AddFileHeader<CR>
+nnoremap <leader>fh :AddHeader<CR>
 ```
 
 ---
