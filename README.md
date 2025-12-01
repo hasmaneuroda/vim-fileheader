@@ -1,4 +1,4 @@
-# vim-file-header
+# vim-fileheader
 
 A small Vim plugin that automatically inserts a file header into new files and keeps a “Last modified” timestamp up to date.  
 For shell scripts (`*.sh`), it also ensures a proper shebang at the top of the file.
