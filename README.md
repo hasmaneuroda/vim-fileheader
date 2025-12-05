@@ -37,8 +37,8 @@ Example header for a config file:
 ############################################################
 # File:          example.conf
 # Path:          $HOME/projects/example.conf
-# Created:       2025-12-01 17:45
-# Last modified: 2025-12-01 17:45
+# Created:       2025-12-01 13:12
+# Last modified: 2025-12-01 13:37
 ############################################################
 ```
 
@@ -123,7 +123,11 @@ It checks the first lines for a `# File:` header marker.
 
 ### Adding a header to existing files
 
-You can add a header manually to an existing file with:
+Assumed you added:
+``` 
+command! AddHeader call InsertHeader()
+```
+in your `.vimrc` you can add a header manually to an existing file with:
 
 ```vim
 :AddHeader
