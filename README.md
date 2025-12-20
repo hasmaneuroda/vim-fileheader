@@ -37,7 +37,7 @@ If you use a plugin manager like `vim-plug` simply add
 the following lines to your `~/.vimrc`:
 ```vim
 call plug#begin('~/.vim/plugged')
-Plug 'hasmaneuroda/vim-file-header'
+Plug 'hasmaneuroda/vim-fileheader'
 call plug#end()
 ```
 
@@ -101,3 +101,4 @@ block.
   how the header was inserted.
 - Header detection looks for `# File:` near the top of the file. Timestamp updates only
   touch files that already contain this header marker.
+  
