@@ -1,168 +1,103 @@
 # vim-fileheader
 
-A small Vim plugin that automatically inserts a file header into new files and keeps a “Last modified” timestamp up to date.  
-For shell scripts (`*.sh`), it also ensures a proper shebang at the top of the file.
+A small Vim plugin that inserts a file header for selected file types and keeps the
+`Last modified` timestamp up to date.
 
 ## Features
 
-- Automatically inserts a header for new files matching configurable patterns  
-- Header includes:
-  - File name
-  - Path (with `$HOME` instead of `/home/username` if applicable)
-  - Created timestamp
-  - Last modified timestamp
-- Automatically updates the `Last modified` line on every write
-- Special handling for `*.sh` files:
-  - Adds `#!/usr/bin/env bash` if no shebang is present
-  - Inserts the header below an existing shebang
-- Manual command to add a header to existing files
-- Simple, single-file plugin
-
-Example header for a shell script:
-
-```text
-#!/usr/bin/env bash
-
-############################################################
-# File:          example.sh
-# Path:          $HOME/projects/example.sh
-# Created:       2025-12-01 17:45
-# Last modified: 2025-12-01 17:45
-############################################################
-```
-
-Example header for a config file:
-
-```text
-############################################################
-# File:          example.conf
-# Path:          $HOME/projects/example.conf
-# Created:       2025-12-01 13:12
-# Last modified: 2025-12-01 13:37
-############################################################
-```
-
----
+- Automatically inserts a header for new files (`BufNewFile`) matching these extensions:
+  - `*.sh`, `*.conf`, `*.service`, `*.timer`, `*.info`
+- Provides a manual command to insert a header into the current buffer:
+  - `:AddHeader`
+- Updates the `Last modified:` line on save (`BufWritePre`) **only** when:
+  - the buffer is actually modified, and
+  - a header is present in the file
+- Path formatting:
+  - Files inside your home directory are shown as `~/...` (no username shown)
+  - Files outside `$HOME` keep their absolute path (e.g. `/etc/...`)
 
 ## Installation
 
-### Using Vim’s built-in `pack` mechanism (no plugin manager)
-
-Clone the repository into your `pack` directory.
-
-**Vim:**
-
+### Vim packages
+Create directory-tree and clone the repo:
 ```bash
-mkdir -p ~/.vim/pack/mystuff/start
-cd ~/.vim/pack/mystuff/start
-git clone git@github.com:hasmaneuroda/vim-file-header.git
+mkdir -p ~/.vim/pack/helpers/start
+cd ~/.vim/pack/helpers/start
+git clone https://github.com/hasmaneuroda/vim-fileheader.git
 ```
 
-**Neovim:**
+Or manually put the plugin file here:
 
-```bash
-mkdir -p ~/.config/nvim/pack/mystuff/start
-cd ~/.config/nvim/pack/mystuff/start
-git clone git@github.com:hasmaneuroda/vim-file-header.git
-```
+- `~/.vim/pack/helpers/start/vim-fileheader/plugin/fileHeader.vim`
 
-On the next start, Vim/Neovim will automatically load `plugin/file_header.vim`.
+Vim loads packages under `pack/*/start/*` automatically on startup.
 
-### Using a plugin manager (example: vim-plug)
-
+### Using a plugin manager (vim-plug for example)
+If you use a plugin manager like `vim-plug` simply add
+the following lines to your `~/.vimrc`:
 ```vim
 call plug#begin('~/.vim/plugged')
-
 Plug 'hasmaneuroda/vim-file-header'
-
 call plug#end()
 ```
 
-Then run `:PlugInstall`.
+### Optional packages
 
----
-
-## Configuration
-
-By default, the plugin activates for:
-
-```text
-*.sh,*.conf,*.service,*.timer
-```
-
-You can override this list in your `vimrc` **before** the plugin is loaded:
+If you keep it under `pack/*/opt/*`, you must load it manually, e.g. in `~/.vimrc`:
 
 ```vim
-" Example: add Python files and drop .timer
-let g:file_header_patterns = '*.sh,*.conf,*.service,*.py'
+packadd vim-fileheader
 ```
-
-This affects:
-
-- When headers are automatically inserted (`BufNewFile`)
-- When `Last modified` is automatically updated (`BufWritePre`)
-
----
 
 ## Usage
 
-### Automatic behaviour
+### Automatic header insertion
 
-- When you create a **new file** matching `g:file_header_patterns`, the plugin:
-  - Inserts a header at the top of the file
-  - For `*.sh`:
-    - Adds a shebang if it does not exist
-    - Places the header below the shebang if it does exist
+Create a new file matching one of the configured extensions, e.g.:
 
-- Whenever you **write** a matching file, the plugin:
-  - Searches for a `# Last modified:` line in the header
-  - Updates it with the current timestamp
+- `vim new-script.sh`
+- `vim my.service`
 
-The plugin will **not** insert a second header if one already exists.  
-It checks the first lines for a `# File:` header marker.
+The header is inserted automatically.
 
-### Adding a header to existing files
+Shell scripts:
+- If the file already starts with a shebang (`#!...`), the header is inserted **after** it.
+- If no shebang exists, `#!/usr/bin/env bash` is prepended and the header follows.
 
-Assumed you added:
-``` 
-command! AddHeader call InsertHeader()
-```
-in your `.vimrc` you can add a header manually to an existing file with:
+### Manual header insertion (`:AddHeader`)
+
+To insert a header into the current buffer (including existing files), run:
 
 ```vim
 :AddHeader
 ```
 
-For shell scripts:
+### Do I need to put `command! AddHeader call InsertHeader()` into `~/.vimrc`?
 
-- If a shebang exists, the header is inserted directly below it.
-- If no shebang exists, the plugin inserts a shebang and then the header.
+No.  
+This plugin already defines the `:AddHeader` command inside the plugin file, so you do
+**not** need to define it again in `~/.vimrc` when the plugin is installed properly.
 
-You can also define a convenient mapping in your `.vimrc`:
+You only need a `command!` line in `~/.vimrc` if you are **not** using the plugin as a
+plugin file (for example, if you copied only the function(s) into your `~/.vimrc` and
+did not install the plugin under `pack/.../start/...` or otherwise load it).
+
+## Customization
+
+To change which file types get an automatic header, edit the `BufNewFile` pattern list
+in `plugin/fileHeader.vim`, for example:
 
 ```vim
-nnoremap <leader>fh :AddHeader<CR>
+autocmd BufNewFile *.sh,*.conf,*.service,*.timer,*.info call s:InsertHeader()
 ```
 
----
+To disable automatic insertion entirely, remove or comment out the `BufNewFile` autocmd
+block.
 
-## Header format
+## Implementation notes
 
-The header is a simple comment block, framed by a `#` border.  
-The border length and spacing are fixed in the plugin, but you can change them in `plugin/fileHeader.vim` if you want a different style:
-
-- Border: `repeat('#', 60)`
-- Comment prefix: `#`
-- `$HOME` is used instead of an absolute `/home/username` prefix if the file is inside your home directory.
-
----
-
-## Limitations and notes
-
-- The plugin assumes `bash` as the shell for `*.sh`:
-  - Shebang: `#!/usr/bin/env bash`
-- Only lines beginning with `# Last modified:` are updated.  
-  If you change that label, automatic updates will no longer work.
-- The plugin is intentionally minimal and does not try to handle language-specific metadata (module docstrings, license headers, etc.).
-
----
+- The plugin does not use `:substitute` for updating timestamps. This avoids errors
+  related to the "previous substitute pattern" state and works reliably regardless of
+  how the header was inserted.
+- Header detection looks for `# File:` near the top of the file. Timestamp updates only
+  touch files that already contain this header marker.
